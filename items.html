@@ -52,27 +52,11 @@
             <section class="section-padding" id="section_3">
                 <div class="container" id="lost_items">
                     <div class="row">
-    
                         <div class="col-lg-12 col-12 text-center mb-4">
                             <h2>Found Items</h2>
                         </div>
                         <input type="text" name="search" id="search" class="form-control mb-4" placeholder="Search for your lost items">
-                        <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
-                            <div class="custom-block-wrap">
-                                <img src="https://www.ikea.com/sg/en/images/products/ikea-365-water-bottle-dark-grey__0916298_pe785100_s5.jpg?f=xs" class="custom-block-image img-fluid" alt="">
-    
-                                <div class="custom-block">
-                                    <div class="custom-block-body">
-                                        <h5 class="mb-3">Water Bottle</h5>
-    
-                                        <p>Water bottle found at T Junction Student Gym at 24th December 2022 6:00pm</p>
-    
-                                    </div>
-    
-                                    <a href="donate.html" class="custom-btn btn">Claim your item!</a>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="itemBody"></div>
                     </div>
                 </div>
             </section>
@@ -161,7 +145,7 @@
             </div>
         </footer>
     </body>
-    
+
     <!-- JAVASCRIPT FILES -->
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
@@ -169,4 +153,66 @@
     <script src="js/click-scroll.js"></script>
     <script src="js/counter.js"></script>
     <script src="js/custom.js"></script>
+    <script>
+        
+        async function getItems(search){
+            let url = `https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod/?ItemName=${search}`
+            try{
+                let res = await fetch(url)
+                .then((res) => {
+                    return res.json()
+                })
+                .then((data) =>{
+                    let items = data;
+                    formatItems(data.Items);
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        getItems("");
+        $("#search").change(function(){
+            let search = $("#search").val()
+            getItems(search);
+        });
+
+        function formatItems(itemsJson){
+            console.log(itemsJson)
+           for (i = 0; i < itemsJson.length; i++){
+            console.log(itemsJson[i].ItemName)
+            let itemName = itemsJson[i].ItemName.S;
+            let imgURL = itemsJson[i].ImageURL.S;
+            let dateTimeFound = new Date(itemsJson[i].DateTimeFound.S);
+            let itemLocation;
+            if (itemsJson[i].Indoors.BOOL){
+                itemLocation = `${itemsJson[i].Block.S}.${itemsJson[i].Level.S}${itemsJson[i].RoomNo.S}`
+            }
+            let brand = itemsJson[i].Brand.S
+            let description = itemsJson[i].Description.S
+            $("#itemBody").append(
+                `
+                <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                    <div class="custom-block-wrap">
+                        <img src="${imgURL}" class="custom-block-image img-fluid" alt="">
+
+                        <div class="custom-block">
+                            <div class="custom-block-body">
+                                <h5 class="mb-3">${itemName}</h5>
+
+                                <p><strong>Date and Time Found: </strong> ${dateTimeFound.toLocaleString()}</p>
+                                <p><strong>Location: </strong>${itemLocation}</p>
+                                <p><strong>Brand: </strong>${brand}</p>
+                                <p><strong>Description: </strong>${description}</p>
+                                
+                            </div>
+
+                            <a href="return_item.html" class="custom-btn btn">Claim your item!</a>
+                        </div>
+                    </div>
+                </div>
+                `
+            )
+           }
+        }
+    </script>
 </html>

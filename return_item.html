@@ -81,19 +81,72 @@
                                 <li>Cups and mugs</li>
                             </ul>
                         </div>
-                        <div class="mt-5">
-                            <h5>Lost Item</h5>
-                            <p>You may report a lost item via this link. Alternatively, you may email us at contactNYP@nyp.edu.sg (with effect from 18 May 2022, askNYP@nyp.edu.sg has been changed to contactNYP@nyp.edu.sg) or call 6451 5115 and please provide us with the following information:</p>
-                            <ol>
-                                <li>Your name and contact number</li>
-                                <li>Date, time and possible place where item was lost</li>
-                                <li>Description of item(s)</li>
-                            </ol>
-                            <p>We will contact you if your item is found.</p>
-                        </div>
                     </div>
                 </div>
                 
+            </section>
+            <section class="volunteer-section section-padding" id="section_4">
+                <div class="container">
+                    <div class="row">
+                        <h2 class="text-white mb-4">Return an Item</h2>
+                        <form id="itemForm">
+                            <div class="custom-form volunteer-form mb-5 mb-lg-0">
+                                <h3 class="mb-4">Item Details</h3>
+                                <div class="row">
+                                    <div class="col-lg-6 col-12">
+                                        <div class="col-12">
+                                            <label for="name">Name</label>
+                                            <input type="text" name="name" id="name" class="form-control" placeholder="Item Name" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="brand">Brand</label>
+                                            <input type="text" name="brand" id="brand" class="form-control" placeholder="Brand" required>
+                                        </div>
+                                        <div class="col-12">    
+                                            <label for="datetimefound">Date and Time Found</label>
+                                            <input type="datetime-local" name="datetimefound" id="datetimefound" class="form-control" required>
+                                        </div>
+                                        <div class="col-12">    
+                                            <label for="outdoor">Item found Outdoors</label>
+                                            <input type="checkbox" name="outdoor" id="outdoor">
+                                        </div>
+                                        <div class="row" id="indoorfields">
+                                            <label>Location</label>
+                                            <div class="col-lg-3 col-6">
+                                                <input type="text" name="block" id="block" class="form-control" placeholder="Block">
+                                            </div>
+                                            <div class="col-lg-3 col-6">
+                                                <input type="text" name="level" id="level" class="form-control" placeholder="Level">
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <input type="text" name="roomno" id="roomno" class="form-control" placeholder="Room Number">
+                                            </div>
+                                        </div>
+                                        <div class="row" id="outdoorfields">
+                                            <div class="col-12">    
+                                                <label for="location">Location</label>
+                                                <input type="text" name="location" id="location" class="form-control" placeholder="Location">
+                                            </div>
+                                        </div>
+                                        <label for="description">Description</label>
+                                        <textarea name="description" rows="3" class="form-control" id="description" placeholder="Description of Item" required></textarea>
+                                    </div>
+                                    <div class="col-lg-6 col-12">
+                                        <img src="images/download.png" id="image" class="img-fluid mb-4" alt="" style="margin: auto;">
+                                        <div class="input-group input-group-file">
+                                            <input type="file" class="form-control" id="fileupload" accept="image/png, image/jpeg" required>
+                                            
+                                            <label class="input-group-text" for="fileupload" style="cursor: pointer;">Upload a Picture</label>
+
+                                            <i class="bi-cloud-arrow-up ms-auto"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="form-control">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </section>
             <footer class="site-footer">
                 <div class="container">
@@ -186,5 +239,62 @@
         <script src="js/click-scroll.js"></script>
         <script src="js/counter.js"></script>
         <script src="js/custom.js"></script>
+        <script>
+            $("#outdoorfields").hide()
+            $("#outdoor").change(function(){
+                console.log($("#outdoor").val)
+                if ($("#outdoor").is(":checked")){
+                    $("#indoorfields").hide()
+                    $("#outdoorfields").show()
+                } else{
+                    $("#indoorfields").show()
+                    $("#outdoorfields").hide()
+                }
+            });
+            $("#fileupload").change(function(){
+                const file = this.files[0];
+                if (file){
+                    let reader = new FileReader();
+                    reader.onload = function(event){
+                        $("#image").attr('src', event.target.result);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            })
+            function test(){
+                console.log("Hello World");
+            }
+            $("#itemForm").submit(sendPost());
+            function sendPost(){
+                const postData = async () => {
+                    var itemdata
+                    if ($("#outdoor").is(":checked")){
+                        
+                    } else{
+                        itemdata = {
+                            DateTimeFound: $("#dateTimeFound").val,
+                            Name: $("#name").val,
+                            Block: $("#block").val,
+                            Brand: $("#brand").val,
+                            Description: $("#description").val,
+                            Indoors: "true",
+                            RoomNo: $("#roomno").val,
+                            ImageURL: $("#imageURL").val,  
+                        }
+                    }
+                    const res = await fetch(url, {
+                        method: 'PUT',
+                        headers:{
+                            'Content-type': 'application/json'
+                        },
+                        body: JSON.stringify(itemdata)
+                    });
+                    const resData = await res.json();
+                    return resData;
+                }
+            }
+            function uploadFile (){
+            }
+        </script>
     </body>
 </html>
