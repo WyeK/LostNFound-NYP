@@ -108,7 +108,7 @@
                                         </div>
                                         <div class="col-12">    
                                             <label for="outdoor">Item found Outdoors</label>
-                                            <input type="checkbox" name="outdoor" id="outdoor">
+                                            <input type="checkbox" name="" id="outdoor">
                                         </div>
                                         <div class="row" id="indoorfields">
                                             <label>Location</label>
@@ -251,6 +251,7 @@
                     $("#outdoorfields").hide()
                 }
             });
+            var base64;
             $("#fileupload").change(function(){
                 const file = this.files[0];
                 if (file){
@@ -261,39 +262,44 @@
                     reader.readAsDataURL(file);
                 }
             })
-            function test(){
-                console.log("Hello World");
-            }
-            $("#itemForm").submit(sendPost());
-            function sendPost(){
-                const postData = async () => {
-                    var itemdata
-                    if ($("#outdoor").is(":checked")){
-                        
-                    } else{
-                        itemdata = {
-                            DateTimeFound: $("#dateTimeFound").val,
-                            Name: $("#name").val,
-                            Block: $("#block").val,
-                            Brand: $("#brand").val,
-                            Description: $("#description").val,
-                            Indoors: "true",
-                            RoomNo: $("#roomno").val,
-                            ImageURL: $("#imageURL").val,  
+            $("#itemForm").submit(function(event){
+                event.preventDefault();
+                postData();
+            });
+            const postData = () => {
+                var itemdata = {}
+                var url = 'https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod'
+                const file = document.getElementById('fileupload').files[0]
+                let reader = new FileReader();
+                if (file){
+                    reader.readAsBinaryString(file);
+                    reader.onload = function() {
+                        imageBase64 = btoa(reader.result);
+                        if ($("#outdoor").is(":checked")){
+                        } else{
+                            itemdata = {
+                                DateTimeFound: $("#datetimefound").val(),
+                                Name: $("#name").val(),
+                                Block: $("#block").val(),
+                                Brand: $("#brand").val(),
+                                Description: $("#description").val(),
+                                Indoors: true,
+                                RoomNo: $("#roomno").val(),
+                                ImageEncoded: imageBase64,  
+                            }
+                            console.log(itemdata);
                         }
+                        const res = fetch(url, {
+                            method: 'PUT',
+                            headers:{
+                                'Content-type': 'application/json'
+                            },
+                            body: JSON.stringify(itemdata)
+                        });
+                        res();
+                        console.log(itemdata);
                     }
-                    const res = await fetch(url, {
-                        method: 'PUT',
-                        headers:{
-                            'Content-type': 'application/json'
-                        },
-                        body: JSON.stringify(itemdata)
-                    });
-                    const resData = await res.json();
-                    return resData;
                 }
-            }
-            function uploadFile (){
             }
         </script>
     </body>
