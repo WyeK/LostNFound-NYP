@@ -181,7 +181,7 @@
            for (i = 0; i < itemsJson.length; i++){
             console.log(itemsJson[i].ItemName)
             let itemName = itemsJson[i].ItemName.S;
-            let imgURL = itemsJson[i].ImageURL.S;
+            let itemID = itemsJson[i].ItemID.S;
             let dateTimeFound = new Date(itemsJson[i].DateTimeFound.S);
             let itemLocation;
             if (itemsJson[i].Indoors.BOOL){
@@ -193,7 +193,7 @@
                 `
                 <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
                     <div class="custom-block-wrap">
-                        <img src="${imgURL}" class="custom-block-image img-fluid" alt="">
+                        <img src="images/items/${itemID}.png" class="custom-block-image img-fluid" alt="">
 
                         <div class="custom-block">
                             <div class="custom-block-body">

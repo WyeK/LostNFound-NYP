@@ -268,7 +268,7 @@
             });
             const postData = () => {
                 var itemdata = {}
-                var url = 'https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod'
+                var url = 'https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod/'
                 const file = document.getElementById('fileupload').files[0]
                 let reader = new FileReader();
                 if (file){
@@ -279,24 +279,32 @@
                         } else{
                             itemdata = {
                                 DateTimeFound: $("#datetimefound").val(),
-                                Name: $("#name").val(),
+                                ItemName: $("#name").val(),
                                 Block: $("#block").val(),
                                 Brand: $("#brand").val(),
                                 Description: $("#description").val(),
                                 Indoors: true,
                                 RoomNo: $("#roomno").val(),
+                                Level: $("#level").val(),
                                 ImageEncoded: imageBase64,  
                             }
                             console.log(itemdata);
                         }
-                        const res = fetch(url, {
-                            method: 'PUT',
-                            headers:{
-                                'Content-type': 'application/json'
+                        $.ajax({
+                            url: url,
+                            headers:  {
+                                'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(itemdata)
+                            type: "PUT",
+                            dataType: "json",
+                            data: JSON.stringify(itemdata),
+                            success: function (result) {
+                                alert("Put request sent!")
+                            },
+                            error: function() {
+                                console.log("Error sending request!")
+                            }
                         });
-                        res();
                         console.log(itemdata);
                     }
                 }
