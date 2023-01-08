@@ -142,7 +142,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="form-control">Submit</button>
+                                <button type="submit" id="submitbtn" class="form-control">Submit</button>
                             </div>
                         </form>
                     </div>
@@ -276,6 +276,15 @@
                     reader.onload = function() {
                         imageBase64 = btoa(reader.result);
                         if ($("#outdoor").is(":checked")){
+                            itemdata = {
+                                DateTimeFound: $("#datetimefound").val(),
+                                ItemName: $("#name").val(),
+                                Brand: $("#brand").val(),
+                                Description: $("#description").val(),
+                                Indoors: true,
+                                Location: $("#location").val(),
+                                ImageEncoded: imageBase64,  
+                            }
                         } else{
                             itemdata = {
                                 DateTimeFound: $("#datetimefound").val(),
@@ -290,6 +299,7 @@
                             }
                             console.log(itemdata);
                         }
+                        $("#submitbtn").html(`<div class="spinner-border text-primary" role="status"></div>`)
                         $.ajax({
                             url: url,
                             headers:  {
@@ -299,7 +309,8 @@
                             dataType: "json",
                             data: JSON.stringify(itemdata),
                             success: function (result) {
-                                alert("Put request sent!")
+                                alert("Item details uploaded!")
+                                window.location.replace("index.html")
                             },
                             error: function() {
                                 console.log("Error sending request!")
