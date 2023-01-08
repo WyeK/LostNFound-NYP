@@ -35,9 +35,19 @@ def putItems(event):
     client = boto3.client('dynamodb')
     body = json.loads(event["body"])
     ItemID = str(uuid.uuid4())
-    response = client.put_item(
-        TableName='NYP-LostNFound',
-        Item={
+    data = {}
+    if "Location" in body:
+            data={
+            'ItemID': {'S': ItemID},
+            'DateTimeFound': {'S': body["DateTimeFound"]},
+            'ItemName': {'S': body["ItemName"]},
+            'Brand': {'S': body["Brand"]},
+            'Description': {'S': body["Description"]},
+            'Indoors': {'BOOL': body["Indoors"]},
+            'Location': {'S': str(body["Location"])}
+        }
+    else:
+        data={
             'ItemID': {'S': ItemID},
             'DateTimeFound': {'S': body["DateTimeFound"]},
             'ItemName': {'S': body["ItemName"]},
@@ -47,7 +57,11 @@ def putItems(event):
             'Description': {'S': body["Description"]},
             'Indoors': {'BOOL': body["Indoors"]},
             'RoomNo': {'S': str(body["RoomNo"])}
-        })
+        }
+    response = client.put_item(
+        TableName='NYP-LostNFound',
+            Item = data
+        )
     save_img_s3(ItemID, body["ImageEncoded"])
     return (200, response)
 
