@@ -176,13 +176,19 @@
                     <div class="row justify-content-center align-items-center">
 
                         <div class="col-lg-5 col-12 ms-auto">
-                            <h2 class="mb-0">Make an impact. <br> Help others.</h2>
+                            <h2 class="mb-0">Receive updates on new found items!</h2>
                         </div>
 
                         <div class="col-lg-5 col-12">
-                            <a href="found_item.html" class="me-4">Find your Lost Item</a>
+                            <form class="custom-form subscribe-form" id="subscribeForm">
+                                <h5 class="mb-4">Newsletter Form</h5>
 
-                            <a href="items.html" class="custom-btn btn smoothscroll">Return an Item</a>
+                                <input type="email" name="subscribe-email" id="subscribe-email" pattern="[^ @]*@[^ @]*" class="form-control" placeholder="Email Address" required>
+
+                                <div class="col-lg-12 col-12">
+                                    <button id="submitbtn" type="submit" class="form-control">Subscribe</button>
+                                </div>
+                            </form>
                         </div>
 
                     </div>
@@ -273,7 +279,6 @@
                 </div>
             </div>
         </footer>
-
         <!-- JAVASCRIPT FILES -->
         <script src="js/jquery.min.js"></script>
         <script src="js/bootstrap.min.js"></script>
@@ -281,6 +286,34 @@
         <script src="js/click-scroll.js"></script>
         <script src="js/counter.js"></script>
         <script src="js/custom.js"></script>
-
+        <script>
+            $("#subscribeForm").submit(function(event){
+                event.preventDefault();
+                postData();
+            });
+            const postData = () => {
+                url = `https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod/subscribe`
+                $("#submitbtn").html(`<div class="spinner-border text-primary" role="status"></div>`)
+                email_data = {
+                    "Email": $("#subscribe-email").val()
+                }
+                $.ajax({
+                    url: url,
+                    headers:  {
+                        'Content-Type': 'application/json'
+                    },
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify(email_data),
+                    success: function (result) {
+                        alert("Subscription request sent! Check your email to confirm.")
+                        window.location.replace("index.html")
+                    },
+                    error: function() {
+                        console.log("Error sending request!")
+                    }
+                });
+            }
+        </script>
     </body>
 </html>
