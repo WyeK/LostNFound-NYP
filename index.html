@@ -182,9 +182,31 @@
                         <div class="col-lg-5 col-12">
                             <form class="custom-form subscribe-form" id="subscribeForm">
                                 <h5 class="mb-4">Newsletter Form</h5>
-
-                                <input type="email" name="subscribe-email" id="subscribe-email" pattern="[^ @]*@[^ @]*" class="form-control" placeholder="Email Address" required>
-
+                                <div class="row">
+                                    <div class="col-9">
+                                        <input type="email" name="subscribe-email" id="subscribe-email" pattern="[^ @]*@[^ @]*" class="form-control" placeholder="Email Address" required>
+                                    </div>
+                                    <div class="col-3">
+                                        <select class="form-select" id="category">
+                                            <option selected>Category</option>
+                                            <option value="Animals and Pets">Animals and Pets</option>
+                                            <option value="Apparel and Accessories">Apparel and Accessories</option>
+                                            <option value="Beauty and Personal Care">Beauty and Personal Care</option>
+                                            <option value="Education">Education</option>
+                                            <option value="Everyday Objects">Everyday Objects</option>
+                                            <option value="Furniture and Furnishings">Furniture and Furnishings</option>
+                                            <option value="Food and Beverage">Food and Beverage</option>
+                                            <option value="Health and Fitness">Health and Fitness</option>
+                                            <option value="Kitchen and Dining">Kitchen and Dining</option>
+                                            <option value="Medical">Medical</option>
+                                            <option value="Offices and Workspaces">Offices and Workspaces</option>
+                                            <option value="Sports">Sports</option>
+                                            <option value="Technology and Computing">Technology and Computing</option>
+                                            <option value="Text and Documents">Text and Documents</option>
+                                            <option value="Toys and Gaming">Toys and Gaming</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="col-lg-12 col-12">
                                     <button id="submitbtn" type="submit" class="form-control">Subscribe</button>
                                 </div>
@@ -295,7 +317,8 @@
                 url = `https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod/subscribe`
                 $("#submitbtn").html(`<div class="spinner-border text-primary" role="status"></div>`)
                 email_data = {
-                    "Email": $("#subscribe-email").val()
+                    "Email": $("#subscribe-email").val(),
+                    "Category": $("#category").val()
                 }
                 $.ajax({
                     url: url,

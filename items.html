@@ -181,36 +181,30 @@
                 let itemName = itemsJson[i].ItemName.S;
                 itemName = itemName.charAt(0).toUpperCase() + itemName.slice(1)
                 let itemID = itemsJson[i].ItemID.S;
-                let dateTimeFound = new Date(itemsJson[i].DateTimeFound.S);
+                let category = itemsJson[i].Category.S;
+                let dateTimeFound = itemsJson[i].DateFound.S;
                 let itemLocation;
                 if (itemsJson[i].Indoors.BOOL){
                     itemLocation = `${itemsJson[i].Block.S}.${itemsJson[i].Level.S}${itemsJson[i].RoomNo.S}`
                 } else {
                     itemLocation = itemsJson[i].Location.S
                 }
-                let brand = itemsJson[i].Brand.S
                 let description = itemsJson[i].Description.S
-                let colors = itemsJson[i].Colors.SS
+                let color = itemsJson[i].Colour.S
                 let formattedColors = []
-                for (let i=0; i < colors.length; i++){
-                    color = colors[i]
-                    formattedColors.push(color.charAt(0).toUpperCase() + color.slice(1))
-                }
                 $("#itemBody").append(
                     `
-                    <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0">
+                    <div class="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0 p-2">
                         <div class="custom-block-wrap">
                             <img src="images/items/${itemID}.png" class="custom-block-image img-fluid" alt="">
 
                             <div class="custom-block">
                                 <div class="custom-block-body">
-                                    <h5 class="mb-3">${itemName}</h5>
-
-                                    <p><strong>Date and Time Found: </strong> ${dateTimeFound.toLocaleString()}</p>
+                                    <h5 class="mb-3">${itemName} (${category})</h5>
+                                    <p><strong>Date Found: </strong> ${dateTimeFound.toLocaleString()}</p>
                                     <p><strong>Location: </strong>${itemLocation}</p>
-                                    <p><strong>Brand: </strong>${brand}</p>
                                     <p><strong>Description: </strong>${description}</p>
-                                    <p><strong>Colour: </strong>${formattedColors.toString()}</p>
+                                    <p><strong>Colour: </strong>${color}</p>
                                 </div>
 
                                 <a href="return_item.html" class="custom-btn btn">Claim your item!</a>

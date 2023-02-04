@@ -94,13 +94,36 @@
                                 <h3 class="mb-4">Item Details</h3>
                                 <div class="row">
                                     <div class="col-lg-6 col-12">
-                                        <div class="col-12">
-                                            <label for="brand">Brand</label>
-                                            <input type="text" name="brand" id="brand" class="form-control" placeholder="Brand" required>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label for="name">Name</label>
+                                                <input type="text" name="name" id="name" class="form-control" placeholder="Name" required>
+                                            </div>
+                                            <div class="col-6">
+                                                <label for="name">Category</label>
+                                                <select class="form-select" id="category">
+                                                    <option selected disabled>Select Category</option>
+                                                    <option value="Animals and Pets">Animals and Pets</option>
+                                                    <option value="Apparel and Accessories">Apparel and Accessories</option>
+                                                    <option value="Beauty and Personal Care">Beauty and Personal Care</option>
+                                                    <option value="Education">Education</option>
+                                                    <option value="Everyday Objects">Everyday Objects</option>
+                                                    <option value="Furniture and Furnishings">Furniture and Furnishings</option>
+                                                    <option value="Food and Beverage">Food and Beverage</option>
+                                                    <option value="Health and Fitness">Health and Fitness</option>
+                                                    <option value="Kitchen and Dining">Kitchen and Dining</option>
+                                                    <option value="Medical">Medical</option>
+                                                    <option value="Offices and Workspaces">Offices and Workspaces</option>
+                                                    <option value="Sports">Sports</option>
+                                                    <option value="Technology and Computing">Technology and Computing</option>
+                                                    <option value="Text and Documents">Text and Documents</option>
+                                                    <option value="Toys and Gaming">Toys and Gaming</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         <div class="col-12">    
-                                            <label for="datetimefound">Date and Time Found</label>
-                                            <input type="datetime-local" name="datetimefound" id="datetimefound" class="form-control" required>
+                                            <label for="colour">Colour</label>
+                                            <input type="text" name="colour" id="colour" class="form-control" placeholder="Colour" required>
                                         </div>
                                         <div class="col-12">    
                                             <label for="outdoor">Item found Outdoors</label>
@@ -132,10 +155,14 @@
                                         <div class="input-group input-group-file">
                                             <input type="file" class="form-control" id="fileupload" accept="image/png, image/jpeg" required>
                                             
-                                            <label class="input-group-text" for="fileupload" style="cursor: pointer;">Upload a Picture</label>
+                                            <label class="input-group-text" for="fileupload" style="cursor: pointer;">Upload Image</label>
 
                                             <i class="bi-cloud-arrow-up ms-auto"></i>
                                         </div>
+                                        <div>Suggested Names: <span id="nameSuggestions"><p>Upload Image for suggestions</p></span></div>
+                                        <br>
+                                        <div>Suggested Colours: <span id="colourSuggestions"><p>Upload Image for suggestions</p></span></div>
+                                        <br>
                                     </div>
                                 </div>
                                 <button type="submit" id="submitbtn" class="form-control">Submit</button>
@@ -232,7 +259,6 @@
         <script src="js/jquery.min.js"></script>
         <script src="js/bootstrap.min.js"></script>
         <script src="js/jquery.sticky.js"></script>
-        <script src="js/click-scroll.js"></script>
         <script src="js/counter.js"></script>
         <script src="js/custom.js"></script>
         <script>
@@ -254,6 +280,7 @@
                     let reader = new FileReader();
                     reader.onload = function(event){
                         $("#image").attr('src', event.target.result);
+                        postImg(reader.result.split(',')[1]);
                     }
                     reader.readAsDataURL(file);
                 }
@@ -262,8 +289,58 @@
                 event.preventDefault();
                 postData();
             });
+            function postImg(imageBase64){
+                var url = 'https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod/getimageinfo'
+                itemdata = {
+                    Image : imageBase64
+                }
+                $("#nameSuggestions").html(`<div class="spinner-border text-primary" role="status"></div>`);
+                $("#colourSuggestions").html(`<div class="spinner-border text-primary" role="status"></div>`);
+                $.ajax({
+                            url: url,
+                            headers:  {
+                                'Content-Type': 'application/json'
+                            },
+                            type: "POST",
+                            dataType: "json",
+                            data: JSON.stringify(itemdata),
+                            success: function (data) {
+                                //console.log(data);
+                                handleLabels(data.Labels);
+                                handleColours(data.ImageProperties.Foreground.DominantColors)
+                            },
+                            error: function() {
+                                console.log("Error sending request!")
+                            }
+                        });
+            }
+
+            function handleNameInput(name, category) {
+                $("#name").val(name)
+                $("#category").val(category)
+            }
+
+            function handleColourInput(colour) {
+                $("#colour").val(colour)
+            }
+
+            function handleLabels(labels){
+                console.log(labels);
+                $("#nameSuggestions").html("");
+                labels.map((label) => {
+                    $("#nameSuggestions").append(`<button onclick="handleNameInput('${label.Name}', '${label.Categories[0].Name}')" class="btn tags-block-link" type="button">${label.Name}</button>`)
+                })
+            }
+            
+            function handleColours(colours){
+                console.log(colours);
+                $("#colourSuggestions").html("");
+                colours.map((colour) => {
+                    let formatColor = colour.SimplifiedColor.charAt(0).toUpperCase() + colour.SimplifiedColor.slice(1);
+                    $("#colourSuggestions").append(`<button onclick="handleColourInput('${formatColor}')" class="btn tags-block-link" type="button">${formatColor}</button>`)
+                })
+            }
             const postData = () => {
-                var itemdata = {}
                 var url = 'https://v4eg7ltje0.execute-api.us-east-1.amazonaws.com/prod/'
                 const file = document.getElementById('fileupload').files[0]
                 let reader = new FileReader();
@@ -271,30 +348,23 @@
                     reader.readAsBinaryString(file);
                     reader.onload = function() {
                         imageBase64 = btoa(reader.result);
-                        if ($("#outdoor").is(":checked")){
-                            itemdata = {
-                                DateTimeFound: $("#datetimefound").val(),
-                                ItemName: $("#name").val(),
-                                Brand: $("#brand").val(),
-                                Description: $("#description").val(),
-                                Indoors: false,
-                                Location: $("#location").val(),
-                                ImageEncoded: imageBase64,  
-                            }
-                        } else{
-                            itemdata = {
-                                DateTimeFound: $("#datetimefound").val(),
-                                ItemName: $("#name").val(),
-                                Block: $("#block").val(),
-                                Brand: $("#brand").val(),
-                                Description: $("#description").val(),
-                                Indoors: true,
-                                RoomNo: $("#roomno").val(),
-                                Level: $("#level").val(),
-                                ImageEncoded: imageBase64,  
-                            }
-                            console.log(itemdata);
+                        var itemdata = {
+                            DateFound: (new Date()).toDateString(),
+                            ItemName: $("#name").val().toLowerCase(),
+                            Category: $("#category").val(),
+                            Colour: $("#colour").val(),
+                            Description: $("#description").val(),
+                            Indoors: !($("#outdoor").is(":checked")),
+                            ImageEncoded: imageBase64,
                         }
+                        if ($("#outdoor").is(":checked")){
+                            itemdata.Location = $("#location").val()
+                        } else{
+                            itemdata.Block = $("#block").val()
+                            itemdata.Level = $("#level").val()
+                            itemdata.RoomNo = $("#roomno").val()
+                        }
+                        console.log(itemdata);
                         $("#submitbtn").html(`<div class="spinner-border text-primary" role="status"></div>`)
                         $.ajax({
                             url: url,
