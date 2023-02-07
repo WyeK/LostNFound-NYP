@@ -1,0 +1,415 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 201665w-lostnfound-template
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: "s3:GetObject"
+            Resource: !Join ["", ["arn:aws:s3:::", !Ref WebsiteBucket, "/*"]]
+
+  LostNFoundDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LostNFoundDB
+      AttributeDefinitions:
+        - AttributeName: ItemID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ItemID
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  LostNFoundTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: "LostNFoundTopic"
+      TopicName: "lostnfound-topic"
+
+  LostNFoundApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: LostNFoundApi
+
+  OptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref LostNFoundApi
+      ResourceId: !GetAtt
+        - LostNFoundApi
+        - RootResourceId
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ""
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: "Empty"
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+
+  LostNFoundPutMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: PUT
+      ResourceId: !GetAtt
+        - LostNFoundApi
+        - RootResourceId
+      RestApiId: !Ref LostNFoundApi
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LostNFoundMain.Arn}/invocations"
+      MethodResponses:
+        - StatusCode: 200
+
+  LostNFoundGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId: !GetAtt
+        - LostNFoundApi
+        - RootResourceId
+      RestApiId: !Ref LostNFoundApi
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LostNFoundMain.Arn}/invocations"
+      MethodResponses:
+        - StatusCode: 200
+
+  GetImageInfoResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt
+        - LostNFoundApi
+        - RootResourceId
+      PathPart: "getimageinfo"
+      RestApiId: !Ref LostNFoundApi
+
+  GetImageInfoOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref LostNFoundApi
+      ResourceId: !Ref GetImageInfoResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ""
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: "Empty"
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+
+  GetInfoImagePostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      ResourceId: !Ref GetImageInfoResource
+      RestApiId: !Ref LostNFoundApi
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LostNFoundRekognitionFunction.Arn}/invocations"
+      MethodResponses:
+        - StatusCode: 200
+
+  SubscribeResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt
+        - LostNFoundApi
+        - RootResourceId
+      PathPart: "subscribe"
+      RestApiId: !Ref LostNFoundApi
+
+  SubscribeOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref LostNFoundApi
+      ResourceId: !Ref SubscribeResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            ResponseTemplates:
+              application/json: ""
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: "Empty"
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+
+  SubscribePostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      ResourceId: !Ref SubscribeResource
+      RestApiId: !Ref LostNFoundApi
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LostNFoundSNSFunction.Arn}/invocations"
+      MethodResponses:
+        - StatusCode: 200
+
+  LostNFoundMain:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LostNFoundMain
+      Handler: lambda_function.lambda_handler
+      Code:
+        ZipFile: !Sub |
+          import json
+          import boto3
+          import uuid
+          import base64
+
+          def lambda_handler(event, context):
+              if event["path"] == "/":
+                  if event["httpMethod"] == "GET":
+                      response = getItemsByQuery(event)
+                  if event["httpMethod"] == "PUT":
+                      response = putItems(event)
+              return {
+                  'statusCode': response[0],
+                  'headers': {
+                      'Access-Control-Allow-Headers': 'Content-Type',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                  },
+                  'body': json.dumps(response[1])
+              }
+
+          def getItemsByQuery(event):
+              client = boto3.client('dynamodb')
+              item_name = event["queryStringParameters"]["ItemName"]
+              response = client.scan(
+                  TableName='LostNFoundDB',
+                  FilterExpression= "contains(ItemName, :item_name)",
+                  ExpressionAttributeValues={
+                      ":item_name": {"S": item_name}
+                  })
+              return (200, response)
+              
+          def putItems(event):
+              client = boto3.client('dynamodb')
+              body = json.loads(event["body"])
+              ItemID = str(uuid.uuid4())
+              imageBytes = save_img_s3(ItemID, body["ImageEncoded"])
+              data={
+                      'ItemID': {'S': ItemID},
+                      'DateFound': {'S': body["DateFound"]},
+                      'ItemName': {'S': body["ItemName"]},
+                      'Category': {'S': body["Category"]},
+                      'Colour': {'S': body["Colour"]},
+                      'Description': {'S': body["Description"]},
+                      'Indoors': {'BOOL': body["Indoors"]},
+                  }
+              if "Location" in body:
+                  data["Location"] = {'S': str(body["Location"])}
+                  location = body["Location"]
+              else:
+                  data["Block"] = {'S': body["Block"]}
+                  data["Level"] = {'S': body["Level"]}
+                  data["RoomNo"] = {'S': body["RoomNo"]}
+                  location = f'{body["Block"]}.{body["Level"]}{body["RoomNo"]}'
+              response = client.put_item(
+              TableName='LostNFoundDB',
+                  Item = data
+              )
+              send_email_sns(body["ItemName"], body["Category"], location, body["Description"], body["Colour"])
+              return (200, response)
+
+          def save_img_s3(id, base64_img):
+              client = boto3.client('s3')
+              BUCKET_NAME = "201665w-lostnfound-template"
+              file_name = "images/items/" + id + ".png"
+              imageBytes = base64.b64decode(base64_img)
+              response = client.put_object(
+                  Body=imageBytes,
+                  Bucket=BUCKET_NAME,
+                  Key=file_name
+              )
+              
+              return
+
+          def send_email_sns(name, category, location, description, colour):
+              client = boto3.client('sns')
+              response = client.publish(
+                  TopicArn='${LostNFoundTopic}',
+                  Message= 
+                  f'Found Item: {name}\n' + 
+                  f'Location: {location}\n' + 
+                  f'Description: {description}\n' + 
+                  f'Color: {colour}\n' + 
+                  'Check out found items on our website: http://nyp-lostnfoundwebsite-201665w.s3-website-us-east-1.amazonaws.com/'
+                  ,
+                  Subject=f"NYP's LostNFound - Found Item for Category: {category}",
+                  MessageAttributes={
+                      "category": {
+                          "DataType": "String",
+                          "StringValue": category
+                      }
+                  }
+              )
+              return response
+      Runtime: python3.9
+      Timeout: 30
+      Role: arn:aws:iam::328337088526:role/LabRole
+
+  LostNFoundSNSFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LostNFoundSNSFunction
+      Handler: lambda_function.lambda_handler
+      Code:
+        ZipFile: !Sub |
+          import json
+          import boto3
+
+          def lambda_handler(event, context):
+              body = json.loads(event["body"])
+              response = subscribe_email_sns(body)
+              return {
+                  'statusCode': response[0],
+                  'headers': {
+                      'Access-Control-Allow-Headers': 'Content-Type',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                  },
+                  'body': json.dumps(response[1])
+              }
+
+          def subscribe_email_sns(body):
+              client = boto3.client('sns')
+              response = client.subscribe(
+                  TopicArn='${LostNFoundTopic}',
+                  Protocol='email',
+                  Endpoint=body["Email"],
+                  Attributes={
+                      'FilterPolicy': json.dumps({
+                          "category": [body["Category"]
+                          ]
+                      })
+                  }
+              )
+              return (200, response)
+      Runtime: python3.9
+      Timeout: 30
+      Role: arn:aws:iam::328337088526:role/LabRole
+
+  LostNFoundRekognitionFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LostNFoundRekognitionFunction
+      Handler: lambda_function.lambda_handler
+      Code:
+        ZipFile: !Sub |
+          import json
+          import boto3
+          import base64
+
+          def lambda_handler(event, context):
+              body = json.loads(event["body"])
+              response = getLabelsFromRekognition(body["Image"])
+              return {
+                  'statusCode': 200,
+                  'headers': {
+                      'Access-Control-Allow-Headers': 'Content-Type',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                  },
+                  'body': json.dumps(response)
+              }
+
+          def getLabelsFromRekognition(body):
+              client = boto3.client('rekognition')
+              imageBytes = base64.b64decode(body)
+              response = client.detect_labels(
+                  Image={
+                      'Bytes': imageBytes,
+                  },
+                  MaxLabels=5,
+                  MinConfidence=70,
+                  Features=['GENERAL_LABELS', 'IMAGE_PROPERTIES'],
+                  Settings={
+                      'ImageProperties':{
+                          'MaxDominantColors': 5
+                      }
+                  }
+              )
+              return response
+      Runtime: python3.9
+      Timeout: 30
+      Role: arn:aws:iam::328337088526:role/LabRole
+
+Outputs:
+  WebsiteUrl:
+    Description: URL of the LostNFound Website
+    Value: !GetAtt
+      - WebsiteBucket
+      - WebsiteURL
+
+  ApiUrl:
+    Value: !Sub "https://${LostNFoundApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Description: URL of the API Gateway
